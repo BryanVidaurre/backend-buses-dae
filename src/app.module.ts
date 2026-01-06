@@ -8,6 +8,7 @@ import { EstudianteCarreraModule } from './estudiante-carrera/estudiante-carrera
 import { BusModule } from './bus/bus.module';
 import { QrTokenModule } from './qr-token/qr-token.module';
 import { IngresoBusModule } from './ingreso-bus/ingreso-bus.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { IngresoBusModule } from './ingreso-bus/ingreso-bus.module';
     BusModule,
     QrTokenModule,
     IngresoBusModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
