@@ -5,6 +5,7 @@ import {
   Body,
   UploadedFile,
   UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EstudianteService } from './estudiante.service';
@@ -18,9 +19,16 @@ export class EstudianteController {
   @UseInterceptors(FileInterceptor('file'))
   uploadFile(
     @UploadedFile() file: MulterFile,
-    @Body('anio') anio: number,
-    @Body('semestre') semestre: number,
+    @Body('anio') anio: string,
+    @Body('semestre') semestre: string,
   ) {
-    return this.estudianteService.uploadExcel(file, anio, semestre);
+    if (!semestre) {
+      throw new BadRequestException('Semestre no encontrado');
+    }
+
+    const anioNum = Number(anio);
+    const semestreNum = Number(semestre);
+
+    return this.estudianteService.uploadExcel(file, anioNum, semestreNum);
   }
 }
