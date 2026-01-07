@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Bus } from './entities/bus.entity';
 import { Repository } from 'typeorm';
 import { CreateBusDto } from './dto/create-bus.dto';
-
+import { Bus } from './entities/bus.entity';
 @Injectable()
 export class BusService {
   constructor(
@@ -11,12 +10,36 @@ export class BusService {
     private readonly busRepo: Repository<Bus>,
   ) {}
 
-  async create(dto: CreateBusDto) {
+  async create(dto: CreateBusDto): Promise<Bus> {
+    // Buscar si ya existe un bus con esa patente, incluso eliminado
+    const existingBus = await this.busRepo.findOne({
+      where: { bus_patente: dto.bus_patente },
+    });
+
+    if (existingBus) {
+      if (existingBus.deleted) {
+        // Si estaba eliminado, “recuperarlo”
+        existingBus.deleted = false;
+        return this.busRepo.save(existingBus);
+      } else {
+        throw new Error('La patente ya existe'); // No duplicar
+      }
+    }
+
+    // Si no existe, crear uno nuevo
     const bus = this.busRepo.create(dto);
-    return await this.busRepo.save(bus);
+    return this.busRepo.save(bus);
   }
 
-  findAll() {
-    return this.busRepo.find();
+  async findAll(): Promise<Bus[]> {
+    return this.busRepo.find({ where: { deleted: false } }); // ✅ Solo no eliminados
+  }
+
+  async remove(bus_id: number): Promise<void> {
+    const bus = await this.busRepo.findOne({ where: { bus_id } });
+    if (!bus) throw new NotFoundException('Bus no encontrado');
+
+    bus.deleted = true; // ✅ Eliminación lógica
+    await this.busRepo.save(bus);
   }
 }

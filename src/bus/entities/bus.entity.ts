@@ -9,6 +9,9 @@ export class Bus {
   @Column({ name: 'bus_patente', unique: true })
   bus_patente: string;
 
+  @Column({ name: 'deleted', default: false })
+  deleted: boolean;
+
   @OneToMany(() => IngresoBus, (ib) => ib.bus)
   ingresosBus: IngresoBus[];
 }
