@@ -1,14 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { IngresoBus } from 'src/ingreso-bus/entities/ingreso-bus.entity';
+import { IngresoBus } from '../../ingreso-bus/entities/ingreso-bus.entity';
 
-@Entity()
+@Entity({ name: 'bus' })
 export class Bus {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'bus_id' })
   bus_id: number;
 
-  @Column({ unique: true })
+  @Column({ name: 'bus_patente', unique: true })
   bus_patente: string;
 
   @OneToMany(() => IngresoBus, (ib) => ib.bus)
-  ingresos: IngresoBus[];
+  ingresosBus: IngresoBus[];
 }

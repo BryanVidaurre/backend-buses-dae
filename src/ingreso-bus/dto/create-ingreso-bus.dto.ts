@@ -1,12 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-import { IsNumber, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty, IsDateString, IsNumber } from 'class-validator';
 
 export class CreateIngresoBusDto {
-  @IsString()
-  token: string; // QR escaneado
+  @IsInt()
+  @IsNotEmpty()
+  est_sem_id: number;
 
-  @IsNumber()
+  @IsInt()
+  @IsNotEmpty()
   bus_id: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  qr_id: number;
+
+  @IsDateString()
+  fecha_hora: Date;
 
   @IsNumber()
   latitud: number;

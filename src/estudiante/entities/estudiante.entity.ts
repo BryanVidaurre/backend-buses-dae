@@ -1,47 +1,43 @@
-/* eslint-disable prettier/prettier */
 import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm';
+import { EstudianteSemestre } from '../../estudiante-semestre/entities/estudiante-semestre.entity';
+import { QrToken } from '../../qr-token/entities/qr-token.entity';
 import { EstudianteCarrera } from 'src/estudiante-carrera/entities/estudiante-carrera.entity';
-import { QrToken } from 'src/qr-token/entities/qr-token.entity';
-import { IngresoBus } from 'src/ingreso-bus/entities/ingreso-bus.entity';
 
-@Entity()
+@Entity({ name: 'estudiante' })
 export class Estudiante {
-  @PrimaryColumn()
+  @PrimaryColumn({ name: 'per_id' })
   per_id: string;
 
-  @Column()
+  @Column({ name: 'per_drut' })
   per_drut: string;
 
-  @Column()
+  @Column({ name: 'pna_nom' })
   pna_nom: string;
 
-  @Column()
+  @Column({ name: 'pna_apat' })
   pna_apat: string;
 
-  @Column()
+  @Column({ name: 'pna_amat' })
   pna_amat: string;
 
-  @Column()
+  @Column({ name: 'sex_cod' })
   sex_cod: string;
 
-  @Column()
+  @Column({ name: 'mat_anio_ingreso' })
   mat_anio_ingreso: number;
 
-  @Column({ unique: true })
+  @Column({ name: 'per_email', unique: true })
   per_email: string;
 
-  @Column()
+  @Column({ name: 'per_celular' })
   per_celular: string;
 
-  @Column('text')
-  direccion_familiar: string;
-
-  @OneToMany(() => EstudianteCarrera, ec => ec.estudiante)
+  @OneToMany(() => EstudianteCarrera, (ec) => ec.estudiante)
   carreras: EstudianteCarrera[];
 
-  @OneToMany(() => QrToken, qr => qr.estudiante)
-  qrTokens: QrToken[];
+  @OneToMany(() => EstudianteSemestre, (es) => es.estudiante)
+  estudiantesSemestre: EstudianteSemestre[];
 
-  @OneToMany(() => IngresoBus, ib => ib.estudiante)
-  ingresos: IngresoBus[];
+  @OneToMany(() => QrToken, (qr) => qr.estudiante)
+  qrTokens: QrToken[];
 }

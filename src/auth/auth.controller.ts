@@ -14,6 +14,7 @@ export class AuthController {
   }
 
   //crear los admin y luego borrar(? verificar si se deja admins dados o que se puedan registrar utilizando los correos de gestion
+  @Post()
   createAdmin(@Body() dto: CreateAdminDto) {
     return this.authService.createAdmin(dto);
   }

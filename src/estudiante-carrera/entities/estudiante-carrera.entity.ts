@@ -8,15 +8,15 @@ export class EstudianteCarrera {
   @PrimaryGeneratedColumn()
   est_car_id: number;
 
-  @ManyToOne(() => Estudiante, e => e.carreras)
+  @ManyToOne(() => Estudiante, (e) => e.carreras)
   estudiante: Estudiante;
 
-  @ManyToOne(() => Carrera, c => c.estudiantes)
+  @ManyToOne(() => Carrera, (c) => c.estudiantes)
   carrera: Carrera;
 
   @Column()
   anio_ingreso: number;
 
   @Column()
-  estado: string;
+  estado: boolean;
 }

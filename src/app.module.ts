@@ -1,3 +1,5 @@
+import { EstudianteSemestreModule } from './estudiante-semestre/estudiante-semestre.module';
+import { SemestreModule } from './semestre/semestre.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -9,7 +11,6 @@ import { BusModule } from './bus/bus.module';
 import { QrTokenModule } from './qr-token/qr-token.module';
 import { IngresoBusModule } from './ingreso-bus/ingreso-bus.module';
 import { AuthModule } from './auth/auth.module';
-
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -29,6 +30,8 @@ import { AuthModule } from './auth/auth.module';
     QrTokenModule,
     IngresoBusModule,
     AuthModule,
+    EstudianteSemestreModule,
+    SemestreModule,
   ],
   controllers: [AppController],
   providers: [AppService],

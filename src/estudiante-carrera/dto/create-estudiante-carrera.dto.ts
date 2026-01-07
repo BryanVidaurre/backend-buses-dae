@@ -1,16 +1,18 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-import { IsInt, IsString } from 'class-validator';
+import { IsInt, IsBoolean, IsNotEmpty } from 'class-validator';
 
 export class CreateEstudianteCarreraDto {
-  @IsString()
-  per_id: string;
+  @IsInt()
+  @IsNotEmpty()
+  per_id: number;
 
   @IsInt()
+  @IsNotEmpty()
   car_cod_carrera: number;
 
   @IsInt()
+  @IsNotEmpty()
   anio_ingreso: number;
 
-  @IsString()
-  estado: string;
+  @IsBoolean()
+  estado: boolean;
 }

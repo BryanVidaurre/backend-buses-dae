@@ -1,9 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-import { IsBoolean, IsString } from 'class-validator';
+import { IsInt, IsUUID, IsBoolean, IsNotEmpty } from 'class-validator';
 
 export class CreateQrTokenDto {
-  @IsString()
-  per_id: string;
+  @IsInt()
+  @IsNotEmpty()
+  est_sem_id: number;
+
+  @IsUUID()
+  @IsNotEmpty()
+  token: string;
 
   @IsBoolean()
   activo: boolean;

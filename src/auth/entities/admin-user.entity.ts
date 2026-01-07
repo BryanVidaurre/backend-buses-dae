@@ -21,7 +21,4 @@ export class AdminUser {
 
   @CreateDateColumn()
   created_at: Date;
-
-  @Column({ default: true })
-  activo: boolean;
 }

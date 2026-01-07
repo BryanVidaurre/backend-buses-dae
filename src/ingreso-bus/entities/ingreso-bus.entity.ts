@@ -1,29 +1,37 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Estudiante } from '../../estudiante/entities/estudiante.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { EstudianteSemestre } from '../../estudiante-semestre/entities/estudiante-semestre.entity';
 import { Bus } from '../../bus/entities/bus.entity';
 import { QrToken } from '../../qr-token/entities/qr-token.entity';
 
-@Entity()
+@Entity({ name: 'ingreso_bus' })
 export class IngresoBus {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'ingreso_id' })
   ingreso_id: number;
 
-  @ManyToOne(() => Estudiante, (e) => e.ingresos)
-  estudiante: Estudiante;
+  @ManyToOne(() => EstudianteSemestre, (es) => es.ingresosBus)
+  @JoinColumn({ name: 'est_sem_id' })
+  estudianteSemestre: EstudianteSemestre;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  @ManyToOne(() => Bus, (b) => b.ingresos)
+  @ManyToOne(() => Bus, (b) => b.ingresosBus)
+  @JoinColumn({ name: 'bus_id' })
   bus: Bus;
 
-  @ManyToOne(() => QrToken)
+  @ManyToOne(() => QrToken, (qr) => qr.ingresosBus)
+  @JoinColumn({ name: 'qr_id' })
   qr: QrToken;
 
-  @Column()
+  @Column({ name: 'fecha_hora', type: 'timestamp' })
   fecha_hora: Date;
 
-  @Column('double precision')
+  @Column({ name: 'latitud', type: 'double precision' })
   latitud: number;
 
-  @Column('double precision')
+  @Column({ name: 'longitud', type: 'double precision' })
   longitud: number;
 }

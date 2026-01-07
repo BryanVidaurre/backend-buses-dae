@@ -1,18 +1,19 @@
-import { Entity, PrimaryColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { EstudianteSemestre } from '../../estudiante-semestre/entities/estudiante-semestre.entity';
 import { EstudianteCarrera } from 'src/estudiante-carrera/entities/estudiante-carrera.entity';
 
-@Entity()
+@Entity({ name: 'carrera' })
 export class Carrera {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn({ name: 'car_cod_carrera' })
   car_cod_carrera: number;
 
-  @Column()
+  @Column({ name: 'prg_nombre_corto' })
   prg_nombre_corto: string;
 
-  @Column()
+  @Column({ name: 'depto' })
   depto: string;
-
-  // eslint-disable-next-line prettier/prettier
-  @OneToMany(() => EstudianteCarrera, ec => ec.carrera)
+  @OneToMany(() => EstudianteCarrera, (ec) => ec.carrera)
   estudiantes: EstudianteCarrera[];
+  @OneToMany(() => EstudianteSemestre, (es) => es.carrera)
+  estudiantesSemestre: EstudianteSemestre[];
 }

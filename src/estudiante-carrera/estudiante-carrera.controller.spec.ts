@@ -11,7 +11,9 @@ describe('EstudianteCarreraController', () => {
       providers: [EstudianteCarreraService],
     }).compile();
 
-    controller = module.get<EstudianteCarreraController>(EstudianteCarreraController);
+    controller = module.get<EstudianteCarreraController>(
+      EstudianteCarreraController,
+    );
   });
 
   it('should be defined', () => {
