@@ -11,28 +11,25 @@ export class BusService {
   ) {}
 
   async create(dto: CreateBusDto): Promise<Bus> {
-    // Buscar si ya existe un bus con esa patente, incluso eliminado
     const existingBus = await this.busRepo.findOne({
       where: { bus_patente: dto.bus_patente },
     });
 
     if (existingBus) {
       if (existingBus.deleted) {
-        // Si estaba eliminado, “recuperarlo”
         existingBus.deleted = false;
         return this.busRepo.save(existingBus);
       } else {
-        throw new Error('La patente ya existe'); // No duplicar
+        throw new Error('La patente ya existe');
       }
     }
 
-    // Si no existe, crear uno nuevo
     const bus = this.busRepo.create(dto);
     return this.busRepo.save(bus);
   }
 
   async findAll(): Promise<Bus[]> {
-    return this.busRepo.find({ where: { deleted: false } }); // ✅ Solo no eliminados
+    return this.busRepo.find({ where: { deleted: false } });
   }
 
   async remove(bus_id: number): Promise<void> {

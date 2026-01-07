@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { Estudiante } from '../../estudiante/entities/estudiante.entity';
 import { Carrera } from '../../carrera/entities/carrera.entity';
