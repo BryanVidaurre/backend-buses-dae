@@ -8,7 +8,7 @@ import { Carrera } from '../carrera/entities/carrera.entity';
 import { Semestre } from '../semestre/entities/semestre.entity';
 import { EstudianteSemestre } from '../estudiante-semestre/entities/estudiante-semestre.entity';
 import { EstudianteCarrera } from '../estudiante-carrera/entities/estudiante-carrera.entity';
-
+import { QrToken } from '../qr-token/entities/qr-token.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -17,6 +17,7 @@ import { EstudianteCarrera } from '../estudiante-carrera/entities/estudiante-car
       Semestre,
       EstudianteSemestre,
       EstudianteCarrera,
+      QrToken,
     ]),
   ],
   controllers: [EstudianteController],

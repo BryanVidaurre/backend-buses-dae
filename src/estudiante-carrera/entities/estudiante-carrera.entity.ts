@@ -12,10 +12,6 @@ export class EstudianteCarrera {
 
   @ManyToOne(() => Carrera, (c) => c.estudiantes)
   carrera: Carrera;
-
-  @Column()
-  anio_ingreso: number;
-
   @Column()
   estado: boolean;
 }
