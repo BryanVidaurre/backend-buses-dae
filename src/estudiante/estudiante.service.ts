@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -337,5 +338,17 @@ export class EstudianteService {
 </body>
 </html>
 `;
+  }
+
+  // En tu Service de NestJS
+  async getEstudiantesAutorizados() {
+    return await this.estudianteRepo.query(`
+    SELECT e.per_id, e.pna_nom, e.pna_apat, qt.token, es.est_sem_id
+    FROM estudiante e
+    JOIN estudiante_semestre es ON e.per_id = es.per_id
+    JOIN semestre s ON s.semestre_id = es.semestre_id
+    JOIN qr_token qt ON e.per_id = qt.per_id
+    WHERE s.activo = true AND es.estado = true
+  `);
   }
 }
