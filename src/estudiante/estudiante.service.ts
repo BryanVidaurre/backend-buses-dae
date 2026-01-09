@@ -37,9 +37,6 @@ export class EstudianteService {
     private qrTokenRepo: Repository<QrToken>,
   ) {}
 
-  // ======================================================
-  // =============== MÉTODO PRINCIPAL =====================
-  // ======================================================
   async uploadExcel(
     file: Express.Multer.File,
     anio: number,
@@ -48,14 +45,18 @@ export class EstudianteService {
     if (!file) throw new BadRequestException('Archivo no recibido');
 
     const logoBase64 = this.loadLogoBase64();
+    await this.semestreRepo.update({ activo: true }, { activo: false });
 
+    const semestre = await this.getOrCreateSemestre(anio, semestreStr);
+    await this.semestreRepo.update(
+      { semestre_id: semestre.semestre_id },
+      { activo: true },
+    );
     const workbook = XLSX.read(file.buffer, { type: 'buffer' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows: any[] = XLSX.utils.sheet_to_json(sheet);
 
     if (!rows.length) throw new BadRequestException('El archivo está vacío');
-
-    const semestre = await this.getOrCreateSemestre(anio, semestreStr);
     const carreraCache = new Map<string, Carrera>();
 
     const transporter = nodemailer.createTransport({
@@ -64,7 +65,7 @@ export class EstudianteService {
       secure: false,
       auth: {
         user: 'thepakross@gmail.com',
-        pass: 'ypgx hwmq milv ofnr',
+        pass: 'zxie zrfo cbek dysq',
       },
     });
 
@@ -126,17 +127,37 @@ export class EstudianteService {
 
     const estudiante = await this.getOrCreateEstudiante(row);
 
-    await this.getOrCreateEstSem(estudiante, semestre, carrera);
+    await this.getOrCreateEstSem(
+      estudiante,
+      semestre,
+      carrera,
+      (row.DIRECCION_FAMILIAR as string) || 'No especificada',
+    );
     await this.getOrCreateEstCar(estudiante, carrera);
 
-    const token = uuidv4();
-    const qrDataUrl = await QRCode.toDataURL(token, { margin: 1, scale: 8 });
+    let tokenStr: string;
 
-    await this.qrTokenRepo.save({
-      token,
-      fecha_creacion: new Date(),
-      estudiante,
+    const qrExistente = await this.qrTokenRepo.findOne({
+      where: { estudiante: { per_id: estudiante.per_id } },
+      order: { fecha_creacion: 'DESC' },
     });
+
+    if (qrExistente) {
+      tokenStr = qrExistente.token;
+      console.log(
+        `Reutilizando QR para: ${estudiante.pna_nom} (RUT: ${estudiante.per_id})`,
+      );
+    } else {
+      tokenStr = uuidv4();
+      await this.qrTokenRepo.save({
+        token: tokenStr,
+        fecha_creacion: new Date(),
+        estudiante,
+      });
+      console.log(`Generando nuevo QR para: ${estudiante.pna_nom}`);
+    }
+
+    const qrDataUrl = await QRCode.toDataURL(tokenStr, { margin: 1, scale: 8 });
 
     const page = await browser.newPage();
     const html = this.buildHtml(estudiante, qrDataUrl, logoBase64);
@@ -150,8 +171,8 @@ export class EstudianteService {
       await transporter.sendMail({
         from: '"DAE Universidad de Tarapacá" <noreply@uta.cl>',
         to: estudiante.per_email,
-        subject: 'Tarjeta de Acceso Bus DAE',
-        html: `<p>Adjunto encontrarás tu tarjeta de acceso.</p>`,
+        subject: 'Reenvío: Tarjeta de Acceso Bus DAE',
+        html: `<p>Hola ${estudiante.pna_nom}, adjuntamos tu tarjeta de acceso para el bus de acercamiento.</p>`,
         attachments: [{ filename: 'tarjeta.png', content: buffer }],
       });
     }
@@ -215,6 +236,7 @@ export class EstudianteService {
     estudiante: Estudiante,
     semestre: Semestre,
     carrera: Carrera,
+    direccion_familiar: string = 'No especificada',
   ) {
     const existe = await this.estSemRepo.findOne({
       where: {
@@ -229,7 +251,7 @@ export class EstudianteService {
         estudiante,
         semestre,
         carrera,
-        direccion_familiar: 'No especificada',
+        direccion_familiar,
         estado: true,
       });
     }
@@ -252,9 +274,6 @@ export class EstudianteService {
     }
   }
 
-  // ======================================================
-  // ================== HTML / LOGO =======================
-  // ======================================================
   private loadLogoBase64(): string {
     const logoPath = path.join(process.cwd(), 'src/assets/logoUta.png');
     if (!fs.existsSync(logoPath)) return '';
