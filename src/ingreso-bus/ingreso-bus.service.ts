@@ -23,13 +23,26 @@ export class IngresoBusService {
 
   // 2. Registrar el ingreso
   async registrarIngreso(data: any) {
+    console.log('Registrando ingreso de bus con datos:', data);
+
+    // Convertimos el timestamp (string/number) a un objeto Date de JS
+    // Esto evita errores de formato en PostgreSQL
+    const fechaAsistencia = new Date(parseInt(data.fecha_hora));
+
     return await this.dataSource.query(
       `
-      INSERT INTO ingreso_bus (fecha_hora, latitud, longitud, est_sem_id, bus_id, qr_id)
-      VALUES (NOW(), $1, $2, $3, $4, $5)
-      RETURNING *
+    INSERT INTO ingreso_bus (fecha_hora, latitud, longitud, est_sem_id, bus_id, qr_id)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING *
     `,
-      [data.latitud, data.longitud, data.est_sem_id, data.bus_id, data.qr_id],
+      [
+        fechaAsistencia,
+        data.latitud,
+        data.longitud,
+        data.est_sem_id,
+        data.bus_id,
+        data.qr_id,
+      ],
     );
   }
 }
