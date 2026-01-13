@@ -22,6 +22,10 @@ import { AuthModule } from './auth/auth.module';
       database: 'buses_db',
       autoLoadEntities: true,
       synchronize: true,
+      extra: {
+        max: 20,
+        idleTimeoutMillis: 30000,
+      },
     }),
     EstudianteModule,
     CarreraModule,

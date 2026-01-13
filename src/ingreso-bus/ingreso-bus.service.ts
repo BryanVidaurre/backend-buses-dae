@@ -12,7 +12,7 @@ export class IngresoBusService {
   async getEstudiantesAutorizados() {
     console.log('Obteniendo estudiantes autorizados...');
     return await this.dataSource.query(`
-      SELECT e.per_id, e.pna_nom, qt.token, es.est_sem_id, qt.qr_id
+      SELECT e.per_id, e.pna_nom, e.pna_apat, e.pna_amat, qt.token, es.est_sem_id, qt.qr_id
       FROM estudiante e
       JOIN estudiante_semestre es ON e.per_id = es.per_id
       JOIN semestre s ON s.semestre_id = es.semestre_id
