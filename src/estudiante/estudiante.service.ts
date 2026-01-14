@@ -194,10 +194,15 @@ export class EstudianteService {
     </div>
     
     <div style="padding: 30px; line-height: 1.6;">
-      <p style="font-size: 18px;">Hola <strong>${estudiante.pna_nom} ${estudiante.pna_apat}</strong>,</p>
+      <p style="font-size: 18px;">Hola <strong>${estudiante.pna_nom} ${estudiante.pna_apat} ${estudiante.pna_amat}</strong>,</p>
       
-      <p>Te informamos que tu <strong>Tarjeta de Acceso</strong> para el bus de acercamiento de la Universidad de Tarapacá ya está disponible.</p>
+      <p>Te informamos que tu <strong>Tarjeta de Acceso</strong> para el bus de acercamiento de la Universidad de Tarapacá ya está disponible para el presente periodo.</p>
       
+      <div style="background-color: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0; color: #0d47a1;"><strong>ℹ️ Información sobre tu código QR:</strong></p>
+        <p style="margin: 5px 0 0 0; font-size: 14px;">
+          Si ya has sido beneficiario de este servicio en semestres anteriores, <strong>tu código QR sigue siendo el mismo</strong>.
+
       <div style="background-color: #f9f9f9; border-left: 4px solid #355085; padding: 15px; margin: 20px 0;">
         <p style="margin: 0;"><strong>Instrucciones de uso:</strong></p>
         <ul style="margin: 10px 0;">
@@ -206,10 +211,6 @@ export class EstudianteService {
           <li>Asegúrate de que el código QR sea legible para el escáner del bus.</li>
         </ul>
       </div>
-
-      <p style="font-size: 14px; color: #666;">
-        Este servicio es exclusivo para estudiantes con matrícula vigente y semestre activo.
-      </p>
     </div>
 
     <div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #777;">
@@ -221,7 +222,6 @@ export class EstudianteService {
   </div>
   `;
   }
-
   private async getOrCreateSemestre(anio: number, periodo: string) {
     let semestre = await this.semestreRepo.findOne({
       where: { anio, periodo },

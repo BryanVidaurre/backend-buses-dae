@@ -18,15 +18,18 @@ export class IngresoBusService {
   // 1. Obtener la "Lista Blanca"
   async getEstudiantesAutorizados() {
     console.log('Obteniendo estudiantes autorizados...');
-    // Cambiamos la query para que sea compatible con SQLite (usamos alias simples)
-    return await this.dataSource.query(`
+
+    const autorizados = await this.dataSource.query(`
       SELECT e.per_id, e.pna_nom, e.pna_apat, e.pna_amat, qt.token, es.est_sem_id, qt.qr_id
       FROM estudiante e
       JOIN estudiante_semestre es ON e.per_id = es.per_id
       JOIN semestre s ON s.semestre_id = es.semestre_id
       JOIN qr_token qt ON e.per_id = qt.per_id
       WHERE s.activo = 1 AND es.estado = 1
-    `); // Nota: En SQLite los booleanos suelen ser 1 (true) y 0 (false)
+    `);
+
+    console.log(autorizados);
+    return autorizados;
   }
 
   // 2. Registrar el ingreso individual (Compatible con SQLite)
