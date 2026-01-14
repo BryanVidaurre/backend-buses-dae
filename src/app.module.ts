@@ -11,21 +11,14 @@ import { BusModule } from './bus/bus.module';
 import { QrTokenModule } from './qr-token/qr-token.module';
 import { IngresoBusModule } from './ingreso-bus/ingreso-bus.module';
 import { AuthModule } from './auth/auth.module';
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'bv123',
-      database: 'buses_db',
+      type: 'sqlite',
+      database: 'buses_db.sqlite', // Se creará este archivo en la raíz de tu proyecto
       autoLoadEntities: true,
-      synchronize: true,
-      extra: {
-        max: 20,
-        idleTimeoutMillis: 30000,
-      },
+      synchronize: true, // Esto creará las tablas automáticamente
     }),
     EstudianteModule,
     CarreraModule,

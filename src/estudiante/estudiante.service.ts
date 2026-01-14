@@ -172,11 +172,54 @@ export class EstudianteService {
       await transporter.sendMail({
         from: '"DAE Universidad de Tarapacá" <noreply@uta.cl>',
         to: estudiante.per_email,
-        subject: 'Reenvío: Tarjeta de Acceso Bus DAE',
-        html: `<p>Hola ${estudiante.pna_nom}, adjuntamos tu tarjeta de acceso para el bus de acercamiento.</p>`,
-        attachments: [{ filename: 'tarjeta.png', content: buffer }],
+        subject: 'Tu Tarjeta de Acceso - Bus de Acercamiento DAE',
+        // Usamos una función externa para el HTML del correo
+        html: this.buildEmailTemplate(estudiante),
+        attachments: [
+          {
+            filename: `tarjeta_${estudiante.per_id}.png`,
+            content: buffer,
+            cid: 'tarjetaQR',
+          },
+        ],
       });
     }
+  }
+
+  private buildEmailTemplate(estudiante: Estudiante): string {
+    return `
+  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee;">
+    <div style="background-color: #355085; padding: 20px; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 20px;">Servicio de Transporte DAE</h1>
+    </div>
+    
+    <div style="padding: 30px; line-height: 1.6;">
+      <p style="font-size: 18px;">Hola <strong>${estudiante.pna_nom} ${estudiante.pna_apat}</strong>,</p>
+      
+      <p>Te informamos que tu <strong>Tarjeta de Acceso</strong> para el bus de acercamiento de la Universidad de Tarapacá ya está disponible.</p>
+      
+      <div style="background-color: #f9f9f9; border-left: 4px solid #355085; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0;"><strong>Instrucciones de uso:</strong></p>
+        <ul style="margin: 10px 0;">
+          <li>Descarga la imagen adjunta en este correo.</li>
+          <li>Preséntala (digital o impresa) al subir al bus.</li>
+          <li>Asegúrate de que el código QR sea legible para el escáner del bus.</li>
+        </ul>
+      </div>
+
+      <p style="font-size: 14px; color: #666;">
+        Este servicio es exclusivo para estudiantes con matrícula vigente y semestre activo.
+      </p>
+    </div>
+
+    <div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #777;">
+      <p style="margin: 5px 0;">Dirección de Asuntos Estudiantiles (DAE)</p>
+      <p style="margin: 5px 0;">Universidad de Tarapacá</p>
+      <hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;">
+      <p style="font-style: italic;">Este es un correo automático, por favor no respondas a este mensaje.</p>
+    </div>
+  </div>
+  `;
   }
 
   private async getOrCreateSemestre(anio: number, periodo: string) {

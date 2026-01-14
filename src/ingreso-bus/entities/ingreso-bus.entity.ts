@@ -14,6 +14,17 @@ export class IngresoBus {
   @PrimaryGeneratedColumn({ name: 'ingreso_id' })
   ingreso_id: number;
 
+  // Estas son las columnas que recibirán el ID directamente
+  @Column()
+  est_sem_id: number;
+
+  @Column()
+  bus_id: number;
+
+  @Column()
+  qr_id: number;
+
+  // Estas son las relaciones para hacer JOINs después
   @ManyToOne(() => EstudianteSemestre, (es) => es.ingresosBus)
   @JoinColumn({ name: 'est_sem_id' })
   estudianteSemestre: EstudianteSemestre;
@@ -26,12 +37,12 @@ export class IngresoBus {
   @JoinColumn({ name: 'qr_id' })
   qr: QrToken;
 
-  @Column({ name: 'fecha_hora', type: 'timestamp' })
+  @Column({ type: 'datetime' }) // Cambiado para SQLite
   fecha_hora: Date;
 
-  @Column({ name: 'latitud', type: 'double precision' })
+  @Column({ type: 'float' }) // SQLite usa float o real para coordenadas
   latitud: number;
 
-  @Column({ name: 'longitud', type: 'double precision' })
+  @Column({ type: 'float' }) // SQLite usa float o real para coordenadas
   longitud: number;
 }

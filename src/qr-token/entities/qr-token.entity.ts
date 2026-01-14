@@ -17,7 +17,7 @@ export class QrToken {
   @Column({ name: 'token', unique: true })
   token: string;
 
-  @Column({ name: 'fecha_creacion', type: 'timestamp' })
+  @Column()
   fecha_creacion: Date;
 
   @ManyToOne(() => Estudiante, (e) => e.qrTokens)

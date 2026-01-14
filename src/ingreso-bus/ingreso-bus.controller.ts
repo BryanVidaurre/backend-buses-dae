@@ -20,4 +20,9 @@ export class IngresoBusController {
   async registrar(@Body() createIngresoDto: CreateIngresoBusDto) {
     return this.ingresoBusService.registrarIngreso(createIngresoDto);
   }
+
+  @Post('bulk')
+  async registrarMuchos(@Body() datos: CreateIngresoBusDto[]) {
+    return this.ingresoBusService.createMany(datos);
+  }
 }
