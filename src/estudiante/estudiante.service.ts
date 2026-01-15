@@ -177,7 +177,6 @@ export class EstudianteService {
         from: '"DAE Universidad de Tarapacá" <noreply@uta.cl>',
         to: estudiante.per_email,
         subject: 'Tu Tarjeta de Acceso - Bus de Acercamiento DAE',
-        // Usamos una función externa para el HTML del correo
         html: this.buildEmailTemplate(estudiante),
         attachments: [
           {
@@ -420,7 +419,7 @@ export class EstudianteService {
       subject: asunto,
       html: `
       <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2c3e50; line-height: 1.6; max-width: 600px;">
-        <p style="font-size: 16px;">Estimados estudiantes,</p>
+        <p style="font-size: 16px;">Estimado(a) estudiante,</p>
 
         <div style="margin: 20px 0; white-space: pre-wrap; font-size: 15px;">${mensaje}</div>
 

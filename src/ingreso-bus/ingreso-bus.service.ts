@@ -15,7 +15,6 @@ export class IngresoBusService {
     private readonly ingresoBusRepository: Repository<IngresoBus>, // Inyectamos el repo para usar .save()
   ) {}
 
-  // 1. Obtener la "Lista Blanca"
   async getEstudiantesAutorizados() {
     console.log('Obteniendo estudiantes autorizados...');
 
@@ -32,12 +31,9 @@ export class IngresoBusService {
     return autorizados;
   }
 
-  // 2. Registrar el ingreso individual (Compatible con SQLite)
   async registrarIngreso(data: any) {
     console.log('Registrando ingreso de bus con datos:', data);
 
-    // SQLite no usa $1, $2. Usa ? o nombres.
-    // Es mejor usar el repositorio para que sea agnóstico a la base de datos.
     const nuevoIngreso = this.ingresoBusRepository.create({
       fecha_hora: new Date(parseInt(data.fecha_hora)),
       latitud: data.latitud,
@@ -50,28 +46,90 @@ export class IngresoBusService {
     return await this.ingresoBusRepository.save(nuevoIngreso);
   }
 
-  // 3. REGISTRO MASIVO (La solución definitiva a tus bloqueos)
   async createMany(datos: CreateIngresoBusDto[]) {
     console.log(`Procesando lote de ${datos.length} registros para SQLite`);
 
     const nuevosIngresos = datos.map((item) => {
       const ingreso = new IngresoBus();
 
-      // Asignamos los IDs directos
       ingreso.est_sem_id = item.est_sem_id;
       ingreso.bus_id = item.bus_id;
       ingreso.qr_id = item.qr_id;
 
-      // Coordenadas
       ingreso.latitud = item.latitud;
       ingreso.longitud = item.longitud;
 
-      // Procesamos la fecha (importante el parseInt si viene como string)
       ingreso.fecha_hora = new Date(parseInt(item.fecha_hora as any));
 
       return ingreso;
     });
 
     return await this.ingresoBusRepository.save(nuevosIngresos);
+  }
+
+  async getDashboardData() {
+    const [buses, volumen, alumnos, ranking, puntosMapa, totalEstudiantes] =
+      await Promise.all([
+        // 1. Uso de cada bus por semestre
+        this.dataSource.query(`
+        SELECT 
+            s.anio || '-' || s.periodo as semestre, 
+            b.bus_patente as patente, 
+            COUNT(ib.ingreso_id) as total
+        FROM bus b
+        CROSS JOIN semestre s -- Generamos la combinación de todos los buses con todos los semestres
+        LEFT JOIN estudiante_semestre es ON es.semestre_id = s.semestre_id
+        LEFT JOIN ingreso_bus ib ON ib.bus_id = b.bus_id AND ib.est_sem_id = es.est_sem_id
+        GROUP BY semestre, patente;
+      `),
+
+        this.dataSource.query(`
+        SELECT s.anio || '-' || s.periodo as semestre, COUNT(ib.ingreso_id) as total
+        FROM ingreso_bus ib 
+        JOIN estudiante_semestre es ON ib.est_sem_id = es.est_sem_id
+        JOIN semestre s ON es.semestre_id = s.semestre_id
+        GROUP BY semestre
+      `),
+
+        this.dataSource.query(`
+        SELECT s.anio || '-' || s.periodo as semestre, COUNT(DISTINCT es.per_id) as total
+        FROM estudiante_semestre es 
+        JOIN semestre s ON es.semestre_id = s.semestre_id
+        GROUP BY semestre
+      `),
+
+        this.dataSource.query(`
+        SELECT 
+            s.anio || '-' || s.periodo as semestre,
+            e.pna_nom || ' ' || e.pna_apat || ' ' || e.pna_amat as nombre, 
+            COUNT(ib.ingreso_id) as usos
+        FROM estudiante e
+        JOIN estudiante_semestre es ON e.per_id = es.per_id
+        JOIN semestre s ON es.semestre_id = s.semestre_id
+        LEFT JOIN ingreso_bus ib ON es.est_sem_id = ib.est_sem_id
+        GROUP BY semestre, nombre
+        ORDER BY usos DESC, nombre ASC;
+      `),
+
+        this.dataSource.query(`
+        SELECT 
+            ib.latitud, 
+            ib.longitud, 
+            s.anio || '-' || s.periodo as semestre,
+            e.pna_nom || ' ' || e.pna_apat as estudiante,
+            b.bus_patente as bus_patente -- <--- AGREGAR ESTO
+          FROM ingreso_bus ib 
+          JOIN bus b ON ib.bus_id = b.bus_id -- <--- JOIN CON BUS
+          JOIN estudiante_semestre es ON ib.est_sem_id = es.est_sem_id 
+          JOIN semestre s ON es.semestre_id = s.semestre_id
+          JOIN estudiante e ON es.per_id = e.per_id
+          WHERE ib.latitud != 0.0 AND ib.longitud != 0.0
+      `),
+        this.dataSource.query(`
+      select count(*) as total from estudiante 
+      `),
+      ]);
+
+    return { buses, volumen, alumnos, ranking, puntosMapa, totalEstudiantes };
   }
 }
