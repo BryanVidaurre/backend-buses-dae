@@ -49,4 +49,15 @@ export class EstudianteController {
 
     return this.estudianteService.uploadExcel(file, anioNum, semestreStr);
   }
+
+  @Post('notificar-masivo')
+  async enviarNotificacion(@Body() body: { asunto: string; mensaje: string }) {
+    if (!body.asunto || !body.mensaje) {
+      throw new BadRequestException('Asunto y mensaje son requeridos');
+    }
+    return await this.estudianteService.enviarNotificacionMasiva(
+      body.asunto,
+      body.mensaje,
+    );
+  }
 }

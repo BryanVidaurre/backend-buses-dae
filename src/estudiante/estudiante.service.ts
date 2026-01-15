@@ -38,6 +38,18 @@ export class EstudianteService {
     private qrTokenRepo: Repository<QrToken>,
   ) {}
 
+  private getMailTransporter() {
+    return nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'thepakross@gmail.com',
+        pass: 'zxie zrfo cbek dysq',
+      },
+    });
+  }
+
   async uploadExcel(
     file: Express.Multer.File,
     anio: number,
@@ -60,15 +72,7 @@ export class EstudianteService {
     if (!rows.length) throw new BadRequestException('El archivo está vacío');
     const carreraCache = new Map<string, Carrera>();
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: 'thepakross@gmail.com',
-        pass: 'zxie zrfo cbek dysq',
-      },
-    });
+    const transporter = this.getMailTransporter();
 
     const browser = await puppeteer.launch({
       headless: true,
@@ -383,7 +387,6 @@ export class EstudianteService {
 `;
   }
 
-  // En tu Service de NestJS
   async getEstudiantesAutorizados() {
     return await this.estudianteRepo.query(`
     SELECT e.per_id, e.pna_nom, e.pna_apat, qt.token, es.est_sem_id
@@ -393,5 +396,49 @@ export class EstudianteService {
     JOIN qr_token qt ON e.per_id = qt.per_id
     WHERE s.activo = true AND es.estado = true
   `);
+  }
+
+  async enviarNotificacionMasiva(asunto: string, mensaje: string) {
+    const result = await this.estudianteRepo.query(`
+    SELECT DISTINCT e.per_email 
+    FROM estudiante e 
+    JOIN estudiante_semestre es ON e.per_id = es.per_id 
+    JOIN semestre s ON es.semestre_id = s.semestre_id 
+    WHERE s.activo = 1 AND e.per_email IS NOT NULL
+  `);
+
+    const listaCorreos = result.map((r) => r.per_email);
+    if (listaCorreos.length === 0)
+      throw new BadRequestException('No hay alumnos activos.');
+
+    const transporter = this.getMailTransporter();
+
+    await transporter.sendMail({
+      from: '"DAE Universidad de Tarapacá" <noreply@uta.cl>',
+      to: 'thepakross@gmail.com',
+      bcc: listaCorreos,
+      subject: asunto,
+      html: `
+      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2c3e50; line-height: 1.6; max-width: 600px;">
+        <p style="font-size: 16px;">Estimados estudiantes,</p>
+
+        <div style="margin: 20px 0; white-space: pre-wrap; font-size: 15px;">${mensaje}</div>
+
+        <p style="font-size: 15px;">Atentamente,</p>
+
+        <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #eee; color: #7f8c8d; font-size: 13px;">
+          <strong>Dirección de Asuntos Estudiantiles (DAE)</strong><br>
+          Universidad de Tarapacá<br>
+          Arica, Chile
+        </div>
+
+        <div style="margin-top: 20px; font-size: 11px; color: #bdc3c7; font-style: italic;">
+          Este es un mensaje institucional automático. Por favor, no responda a esta dirección de correo.
+        </div>
+      </div>
+    `,
+    });
+
+    return { totalEnviados: listaCorreos.length };
   }
 }

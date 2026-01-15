@@ -29,9 +29,10 @@ export class IngresoBusController {
 
   @Get('analisis/dashboard')
   async getDashboardData() {
-    const [buses, volumen, alumnos, ranking, puntosMapa] = await Promise.all([
-      // 1. Uso de cada bus por semestre
-      this.dataSource.query(`
+    const [buses, volumen, alumnos, ranking, puntosMapa, totalEstudiantes] =
+      await Promise.all([
+        // 1. Uso de cada bus por semestre
+        this.dataSource.query(`
         SELECT 
             s.anio || '-' || s.periodo as semestre, 
             b.bus_patente as patente, 
@@ -43,8 +44,8 @@ export class IngresoBusController {
         GROUP BY semestre, patente;
       `),
 
-      // 2. Volumen total de viajes por semestre
-      this.dataSource.query(`
+        // 2. Volumen total de viajes por semestre
+        this.dataSource.query(`
         SELECT s.anio || '-' || s.periodo as semestre, COUNT(ib.ingreso_id) as total
         FROM ingreso_bus ib 
         JOIN estudiante_semestre es ON ib.est_sem_id = es.est_sem_id
@@ -52,16 +53,15 @@ export class IngresoBusController {
         GROUP BY semestre
       `),
 
-      // 3. Alumnos únicos atendidos por semestre
-      this.dataSource.query(`
+        // 3. Alumnos únicos atendidos por semestre
+        this.dataSource.query(`
         SELECT s.anio || '-' || s.periodo as semestre, COUNT(DISTINCT es.per_id) as total
         FROM estudiante_semestre es 
         JOIN semestre s ON es.semestre_id = s.semestre_id
-        JOIN ingreso_bus ib ON es.est_sem_id = ib.est_sem_id
         GROUP BY semestre
       `),
 
-      this.dataSource.query(`
+        this.dataSource.query(`
         SELECT 
             s.anio || '-' || s.periodo as semestre,
             e.pna_nom || ' ' || e.pna_apat || ' ' || e.pna_amat as nombre, 
@@ -74,7 +74,7 @@ export class IngresoBusController {
         ORDER BY usos DESC, nombre ASC;
       `),
 
-      this.dataSource.query(`
+        this.dataSource.query(`
         SELECT 
             ib.latitud, 
             ib.longitud, 
@@ -88,8 +88,11 @@ export class IngresoBusController {
           JOIN estudiante e ON es.per_id = e.per_id
           WHERE ib.latitud != 0.0 AND ib.longitud != 0.0
       `),
-    ]);
+        this.dataSource.query(`
+      select count(*) as total from estudiante 
+      `),
+      ]);
 
-    return { buses, volumen, alumnos, ranking, puntosMapa };
+    return { buses, volumen, alumnos, ranking, puntosMapa, totalEstudiantes };
   }
 }
