@@ -29,15 +29,18 @@ export class IngresoBusController {
 
   @Get('analisis/dashboard')
   async getDashboardData() {
-    const [buses, volumen, alumnos, ranking] = await Promise.all([
+    const [buses, volumen, alumnos, ranking, puntosMapa] = await Promise.all([
       // 1. Uso de cada bus por semestre
       this.dataSource.query(`
-        SELECT s.anio || '-' || s.periodo as semestre, b.bus_patente as patente, COUNT(ib.ingreso_id) as total
-        FROM ingreso_bus ib 
-        JOIN bus b ON ib.bus_id = b.bus_id
-        JOIN estudiante_semestre es ON ib.est_sem_id = es.est_sem_id
-        JOIN semestre s ON es.semestre_id = s.semestre_id
-        GROUP BY semestre, patente
+        SELECT 
+            s.anio || '-' || s.periodo as semestre, 
+            b.bus_patente as patente, 
+            COUNT(ib.ingreso_id) as total
+        FROM bus b
+        CROSS JOIN semestre s -- Generamos la combinación de todos los buses con todos los semestres
+        LEFT JOIN estudiante_semestre es ON es.semestre_id = s.semestre_id
+        LEFT JOIN ingreso_bus ib ON ib.bus_id = b.bus_id AND ib.est_sem_id = es.est_sem_id
+        GROUP BY semestre, patente;
       `),
 
       // 2. Volumen total de viajes por semestre
@@ -58,22 +61,35 @@ export class IngresoBusController {
         GROUP BY semestre
       `),
 
-      // 4. Ranking de estudiantes INCLUYENDO semestre
-      // Quitamos el LIMIT 10 para que el frontend pueda calcular el ranking real por semestre
       this.dataSource.query(`
         SELECT 
-          s.anio || '-' || s.periodo as semestre,
-          e.pna_nom || ' ' || e.pna_apat || ' ' || e.pna_amat  as nombre, 
-          COUNT(ib.ingreso_id) as usos
-        FROM ingreso_bus ib 
-        JOIN estudiante_semestre es ON ib.est_sem_id = es.est_sem_id
+            s.anio || '-' || s.periodo as semestre,
+            e.pna_nom || ' ' || e.pna_apat || ' ' || e.pna_amat as nombre, 
+            COUNT(ib.ingreso_id) as usos
+        FROM estudiante e
+        JOIN estudiante_semestre es ON e.per_id = es.per_id
         JOIN semestre s ON es.semestre_id = s.semestre_id
-        JOIN estudiante e ON es.per_id = e.per_id
+        LEFT JOIN ingreso_bus ib ON es.est_sem_id = ib.est_sem_id
         GROUP BY semestre, nombre
-        ORDER BY usos DESC
+        ORDER BY usos DESC, nombre ASC;
+      `),
+
+      this.dataSource.query(`
+        SELECT 
+            ib.latitud, 
+            ib.longitud, 
+            s.anio || '-' || s.periodo as semestre,
+            e.pna_nom || ' ' || e.pna_apat as estudiante,
+            b.bus_patente as bus_patente -- <--- AGREGAR ESTO
+          FROM ingreso_bus ib 
+          JOIN bus b ON ib.bus_id = b.bus_id -- <--- JOIN CON BUS
+          JOIN estudiante_semestre es ON ib.est_sem_id = es.est_sem_id 
+          JOIN semestre s ON es.semestre_id = s.semestre_id
+          JOIN estudiante e ON es.per_id = e.per_id
+          WHERE ib.latitud != 0.0 AND ib.longitud != 0.0
       `),
     ]);
 
-    return { buses, volumen, alumnos, ranking };
+    return { buses, volumen, alumnos, ranking, puntosMapa };
   }
 }
