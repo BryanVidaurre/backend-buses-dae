@@ -1,23 +1,27 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateIngresoBusDto } from './dto/create-ingreso-bus.dto';
-import { IngresoBus } from './entities/ingreso-bus.entity'; // Asegúrate de importar tu entidad
+import { IngresoBus } from './entities/ingreso-bus.entity';
+import { Bus } from 'src/bus/entities/bus.entity';
 
 @Injectable()
 export class IngresoBusService {
   constructor(
     private dataSource: DataSource,
     @InjectRepository(IngresoBus)
-    private readonly ingresoBusRepository: Repository<IngresoBus>, // Inyectamos el repo para usar .save()
+    private readonly ingresoBusRepository: Repository<IngresoBus>,
+    @InjectRepository(Bus)
+    private readonly busRepository: Repository<Bus>,
   ) {}
 
   async getEstudiantesAutorizados() {
-    console.log('Obteniendo estudiantes autorizados...');
-
     const autorizados = await this.dataSource.query(`
       SELECT e.per_id, e.pna_nom, e.pna_apat, e.pna_amat, qt.token, es.est_sem_id, qt.qr_id
       FROM estudiante e
@@ -27,42 +31,93 @@ export class IngresoBusService {
       WHERE s.activo = 1 AND es.estado = 1
     `);
 
-    console.log(autorizados);
     return autorizados;
   }
 
   async registrarIngreso(data: any) {
-    console.log('Registrando ingreso de bus con datos:', data);
+    const fecha = new Date(parseInt(data.fecha_hora));
+
+    const horaActual = fecha.toLocaleTimeString('es-CL', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+
+    console.log(
+      `Buscando recorrido para patente ${data.bus_patente} a las ${horaActual}`,
+    );
+
+    const busAsignado = await this.busRepository
+      .createQueryBuilder('bus')
+      .where('bus.bus_patente = :patente', { patente: data.bus_patente })
+      .andWhere(':hora BETWEEN bus.horario_inicio AND bus.horario_fin', {
+        hora: horaActual,
+      })
+      .getOne();
+
+    if (!busAsignado) {
+      throw new NotFoundException(
+        `No hay un recorrido activo para la patente ${data.bus_patente} en el horario ${horaActual}`,
+      );
+    }
 
     const nuevoIngreso = this.ingresoBusRepository.create({
-      fecha_hora: new Date(parseInt(data.fecha_hora)),
+      fecha_hora: fecha,
       latitud: data.latitud,
       longitud: data.longitud,
       est_sem_id: data.est_sem_id,
-      bus_id: data.bus_id,
+      bus_id: busAsignado.bus_id,
       qr_id: data.qr_id,
     });
 
     return await this.ingresoBusRepository.save(nuevoIngreso);
   }
 
-  async createMany(datos: CreateIngresoBusDto[]) {
-    console.log(`Procesando lote de ${datos.length} registros para SQLite`);
+  async createMany(datos: any[]) {
+    console.log(
+      `Procesando lote de ${datos.length} registros con validación de patente/horario`,
+    );
 
-    const nuevosIngresos = datos.map((item) => {
-      const ingreso = new IngresoBus();
+    const nuevosIngresos = await Promise.all(
+      datos.map(async (item) => {
+        const fecha = new Date(parseInt(item.fecha_hora));
+        const horaActual = fecha.toLocaleTimeString('es-CL', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        });
 
-      ingreso.est_sem_id = item.est_sem_id;
-      ingreso.bus_id = item.bus_id;
-      ingreso.qr_id = item.qr_id;
+        console.log(
+          `Buscando recorrido para patente ${item.bus_patente} a las ${horaActual}`,
+        );
 
-      ingreso.latitud = item.latitud;
-      ingreso.longitud = item.longitud;
+        const busAsignado = await this.busRepository
+          .createQueryBuilder('bus')
+          .where('bus.bus_patente = :patente', { patente: item.bus_patente })
+          .andWhere(':hora BETWEEN bus.horario_inicio AND bus.horario_fin', {
+            hora: horaActual,
+          })
+          .getOne();
 
-      ingreso.fecha_hora = new Date(parseInt(item.fecha_hora as any));
+        console.log(busAsignado);
 
-      return ingreso;
-    });
+        if (!busAsignado) {
+          throw new BadRequestException(
+            `No se encontró recorrido activo para la patente ${item.bus_patente} a las ${horaActual}`,
+          );
+        }
+
+        const ingreso = new IngresoBus();
+        ingreso.est_sem_id = item.est_sem_id;
+        ingreso.qr_id = item.qr_id;
+        ingreso.latitud = item.latitud;
+        ingreso.longitud = item.longitud;
+        ingreso.fecha_hora = fecha;
+        ingreso.bus_id = busAsignado.bus_id;
+
+        return ingreso;
+      }),
+    );
 
     return await this.ingresoBusRepository.save(nuevosIngresos);
   }
@@ -74,7 +129,7 @@ export class IngresoBusService {
         this.dataSource.query(`
         SELECT 
             s.anio || '-' || s.periodo as semestre, 
-            b.bus_patente as patente, 
+            b.recorrido_numero as patente, 
             COUNT(ib.ingreso_id) as total
         FROM bus b
         CROSS JOIN semestre s -- Generamos la combinación de todos los buses con todos los semestres
@@ -117,9 +172,9 @@ export class IngresoBusService {
             ib.longitud, 
             s.anio || '-' || s.periodo as semestre,
             e.pna_nom || ' ' || e.pna_apat as estudiante,
-            b.bus_patente as bus_patente -- <--- AGREGAR ESTO
+            b.recorrido_numero as bus_patente
           FROM ingreso_bus ib 
-          JOIN bus b ON ib.bus_id = b.bus_id -- <--- JOIN CON BUS
+          JOIN bus b ON ib.bus_id = b.bus_id 
           JOIN estudiante_semestre es ON ib.est_sem_id = es.est_sem_id 
           JOIN semestre s ON es.semestre_id = s.semestre_id
           JOIN estudiante e ON es.per_id = e.per_id

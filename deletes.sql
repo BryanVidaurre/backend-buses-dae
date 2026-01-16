@@ -8,6 +8,7 @@ DELETE FROM estudiante_carrera;
 DELETE FROM estudiante;
 DELETE FROM carrera;
 DELETE FROM semestre;
+DELETE FROM bus;
 
 -- Reinicia todos los autoincrementales
 DELETE FROM sqlite_sequence;

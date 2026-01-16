@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateBusDto } from './dto/create-bus.dto';
@@ -12,20 +18,28 @@ export class BusService {
 
   async create(dto: CreateBusDto): Promise<Bus> {
     const existingBus = await this.busRepo.findOne({
-      where: { bus_patente: dto.bus_patente },
+      where: { recorrido_numero: dto.recorrido_numero },
     });
 
     if (existingBus) {
-      if (existingBus.deleted) {
-        existingBus.deleted = false;
-        return this.busRepo.save(existingBus);
-      } else {
-        throw new Error('La patente ya existe');
-      }
+      throw new ConflictException(
+        `El recorrido número ${dto.recorrido_numero} ya está asignado al bus con patente ${existingBus.bus_patente}`,
+      );
     }
 
-    const bus = this.busRepo.create(dto);
-    return this.busRepo.save(bus);
+    try {
+      const bus = this.busRepo.create(dto);
+      return await this.busRepo.save(bus);
+    } catch (error: any) {
+      if (error.code === 'SQLITE_CONSTRAINT') {
+        throw new ConflictException(
+          'Error de restricción: Verifique que los datos no estén duplicados.',
+        );
+      }
+      throw new InternalServerErrorException(
+        'Error inesperado al crear el bus',
+      );
+    }
   }
 
   async findAll(): Promise<Bus[]> {
@@ -36,7 +50,7 @@ export class BusService {
     const bus = await this.busRepo.findOne({ where: { bus_id } });
     if (!bus) throw new NotFoundException('Bus no encontrado');
 
-    bus.deleted = true; // ✅ Eliminación lógica
+    bus.deleted = true;
     await this.busRepo.save(bus);
   }
 }

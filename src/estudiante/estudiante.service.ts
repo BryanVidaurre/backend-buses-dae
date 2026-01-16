@@ -88,16 +88,34 @@ export class EstudianteService {
 
         await Promise.all(
           batch.map(async (row) => {
-            await this.procesarFila(
-              row,
-              semestre,
-              carreraCache,
-              browser,
-              transporter,
-              logoBase64,
-            );
-            procesados++;
-            console.log(`Procesados ${procesados}/${rows.length}`);
+            try {
+              // 1. Primero ejecutamos y esperamos el resultado
+              const resultadoEnvio = await this.procesarFila(
+                row,
+                semestre,
+                carreraCache,
+                browser,
+                transporter,
+                logoBase64,
+              );
+
+              procesados++;
+
+              // 2. Ahora sí usamos la variable para el log
+              if (resultadoEnvio) {
+                console.log(
+                  `✅ [${procesados}/${rows.length}] ACEPTADO por servidor: ${row.PER_EMAIL}`,
+                );
+              } else {
+                console.warn(
+                  `⚠️ [${procesados}/${rows.length}] Procesado pero sin envío (Email ausente): ${row.PER_NRUT}`,
+                );
+              }
+            } catch (error) {
+              // Importante: incrementar procesados aquí también si quieres que el contador siga avanzando pese al error
+              procesados++;
+              console.error(`❌ [ERROR] RUT ${row.PER_NRUT}:`, error.message);
+            }
           }),
         );
       }
@@ -149,9 +167,6 @@ export class EstudianteService {
 
     if (qrExistente) {
       tokenStr = qrExistente.token;
-      console.log(
-        `Reutilizando QR para: ${estudiante.pna_nom} (RUT: ${estudiante.per_id})`,
-      );
     } else {
       tokenStr = uuidv4();
       await this.qrTokenRepo.save({
@@ -159,7 +174,6 @@ export class EstudianteService {
         fecha_creacion: new Date(),
         estudiante,
       });
-      console.log(`Generando nuevo QR para: ${estudiante.pna_nom}`);
     }
 
     const qrDataUrl = await QRCode.toDataURL(tokenStr, { margin: 1, scale: 8 });
@@ -173,8 +187,8 @@ export class EstudianteService {
     await page.close();
 
     if (estudiante.per_email) {
-      await transporter.sendMail({
-        from: '"DAE Universidad de Tarapacá" <noreply@uta.cl>',
+      const info = await transporter.sendMail({
+        from: '"DAE Universidad de Tarapacá" <thepakross@gmail.com>',
         to: estudiante.per_email,
         subject: 'Tu Tarjeta de Acceso - Bus de Acercamiento DAE',
         html: this.buildEmailTemplate(estudiante),
@@ -186,7 +200,9 @@ export class EstudianteService {
           },
         ],
       });
+      return info.accepted.length > 0;
     }
+    return false;
   }
 
   private buildEmailTemplate(estudiante: Estudiante): string {
