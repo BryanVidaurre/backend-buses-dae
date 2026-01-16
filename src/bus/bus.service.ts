@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateBusDto } from './dto/create-bus.dto';
 import { Bus } from './entities/bus.entity';
+import { UpdateBusDto } from './dto/update-bus.dto';
 @Injectable()
 export class BusService {
   constructor(
@@ -52,5 +53,18 @@ export class BusService {
 
     bus.deleted = true;
     await this.busRepo.save(bus);
+  }
+
+  async update(id: number, dto: UpdateBusDto) {
+    const bus = await this.busRepo.preload({
+      bus_id: Number(id),
+      ...dto,
+    });
+
+    if (!bus) {
+      throw new NotFoundException(`Bus con ID ${id} no encontrado`);
+    }
+
+    return this.busRepo.save(bus);
   }
 }

@@ -6,11 +6,9 @@ export class Bus {
   @PrimaryGeneratedColumn({ name: 'bus_id' })
   bus_id: number;
 
-  // Ahora el recorrido es ÚNICO. No puede haber dos "Recorrido 1".
   @Column({ name: 'recorrido_numero', unique: true })
   recorrido_numero: number;
 
-  // La patente ya no es única. Podría repetirse si es necesario.
   @Column({ name: 'bus_patente' })
   bus_patente: string;
 

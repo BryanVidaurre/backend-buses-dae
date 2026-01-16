@@ -1,11 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IngresoBus } from './entities/ingreso-bus.entity';
@@ -78,7 +74,7 @@ export class IngresoBusService {
       `Procesando lote de ${datos.length} registros con validación de patente/horario`,
     );
 
-    const nuevosIngresos = await Promise.all(
+    const resultados = await Promise.all(
       datos.map(async (item) => {
         const fecha = new Date(parseInt(item.fecha_hora));
         const horaActual = fecha.toLocaleTimeString('es-CL', {
@@ -86,10 +82,6 @@ export class IngresoBusService {
           minute: '2-digit',
           hour12: false,
         });
-
-        console.log(
-          `Buscando recorrido para patente ${item.bus_patente} a las ${horaActual}`,
-        );
 
         const busAsignado = await this.busRepository
           .createQueryBuilder('bus')
@@ -99,12 +91,11 @@ export class IngresoBusService {
           })
           .getOne();
 
-        console.log(busAsignado);
-
         if (!busAsignado) {
-          throw new BadRequestException(
-            `No se encontró recorrido activo para la patente ${item.bus_patente} a las ${horaActual}`,
+          console.warn(
+            `Saltando registro: No hay recorrido para ${item.bus_patente} a las ${horaActual}`,
           );
+          return null; // Retornamos null para los que fallan
         }
 
         const ingreso = new IngresoBus();
@@ -119,9 +110,25 @@ export class IngresoBusService {
       }),
     );
 
-    return await this.ingresoBusRepository.save(nuevosIngresos);
-  }
+    // Filtramos los nulos para quedarnos solo con los ingresos válidos
+    const nuevosIngresos = resultados.filter((ingreso) => ingreso !== null);
 
+    if (nuevosIngresos.length === 0) {
+      return {
+        message:
+          'No se procesó ningún registro: ninguno coincidía con un horario de bus activo.',
+        procesados: 0,
+      };
+    }
+
+    const guardados = await this.ingresoBusRepository.save(nuevosIngresos);
+
+    return {
+      message: `Lote procesado exitosamente.`,
+      guardados: guardados.length,
+      saltados: datos.length - guardados.length,
+    };
+  }
   async getDashboardData() {
     const [buses, volumen, alumnos, ranking, puntosMapa, totalEstudiantes] =
       await Promise.all([
