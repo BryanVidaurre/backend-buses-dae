@@ -13,7 +13,7 @@ import * as nodemailer from 'nodemailer';
 import puppeteer, { Browser } from 'puppeteer';
 import * as fs from 'fs';
 import * as path from 'path';
-
+import { ConfigService } from '@nestjs/config';
 import { Estudiante } from './entities/estudiante.entity';
 import { Carrera } from '../carrera/entities/carrera.entity';
 import { Semestre } from '../semestre/entities/semestre.entity';
@@ -36,16 +36,17 @@ export class EstudianteService {
     private estCarRepo: Repository<EstudianteCarrera>,
     @InjectRepository(QrToken)
     private qrTokenRepo: Repository<QrToken>,
+    private configService: ConfigService,
   ) {}
 
   private getMailTransporter() {
     return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: this.configService.get<string>('MAIL_HOST', 'smtp.gmail.com'),
       port: 587,
       secure: false,
       auth: {
-        user: 'thepakross@gmail.com',
-        pass: 'zxie zrfo cbek dysq',
+        user: this.configService.get<string>('MAIL_USER'),
+        pass: this.configService.get<string>('MAIL_PASS'),
       },
     });
   }
@@ -104,11 +105,11 @@ export class EstudianteService {
               // 2. Ahora sí usamos la variable para el log
               if (resultadoEnvio) {
                 console.log(
-                  `✅ [${procesados}/${rows.length}] ACEPTADO por servidor: ${row.PER_EMAIL}`,
+                  `[${procesados}/${rows.length}] ACEPTADO por servidor: ${row.PER_EMAIL}`,
                 );
               } else {
                 console.warn(
-                  `⚠️ [${procesados}/${rows.length}] Procesado pero sin envío (Email ausente): ${row.PER_NRUT}`,
+                  `[${procesados}/${rows.length}] Procesado pero sin envío (Email ausente): ${row.PER_NRUT}`,
                 );
               }
             } catch (error) {

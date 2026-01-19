@@ -44,7 +44,6 @@ export class AuthService {
     const match = await bcrypt.compare(dto.password, admin.password);
     if (!match) throw new UnauthorizedException('Credenciales inválidas');
 
-    // 🔐 PAYLOAD DEL TOKEN
     const payload = {
       sub: admin.admin_id,
       email: admin.email,
