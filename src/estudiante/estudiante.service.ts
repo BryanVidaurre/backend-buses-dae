@@ -354,54 +354,117 @@ export class EstudianteService {
 <html>
 <head>
 <style>
-#tarjeta-container{
-  width:450px;
-  border:2px solid #355085;
-  font-family:Arial;
-  background:white;
-}
-.header{
-  background:#355085;
-  color:white;
-  padding:15px;
-  display:flex;
-  align-items:center;
-}
-.logo{height:45px;margin-right:15px;}
-.body{text-align:center;padding:20px;}
-.name{font-size:16px;font-weight:bold;color:#355085;}
-.qr{width:180px;margin-top:20px;}
-.footer{
-  text-align:center;
-  padding:10px;
-  background:#f4f4f4;
-  font-size:12px;
-}
+  /* Configuramos el body para que no tenga márgenes y el fondo sea transparente */
+  body { margin: 0; padding: 0; background: transparent; }
+
+  #tarjeta-container {
+    width: 350px; /* Ancho ideal para visualización en móviles */
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    background: white;
+    border-radius: 20px; /* Bordes redondeados modernos */
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+  }
+
+  .header {
+    background: #355085;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 4px solid #f39c12; /* Detalle estético (color institucional) */
+  }
+
+  .logo { 
+    height: 50px; 
+    margin-bottom: 10px; 
+  }
+
+  .title {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+  }
+
+  .body {
+    text-align: center;
+    padding: 30px 20px;
+    background: linear-gradient(to bottom, #ffffff, #f9f9f9);
+  }
+
+  .name {
+    font-size: 18px;
+    font-weight: 800;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+  }
+
+  .rut {
+    font-size: 14px;
+    color: #7f8c8d;
+    margin-bottom: 20px;
+  }
+
+  .qr-container {
+    background: white;
+    padding: 15px;
+    display: inline-block;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  .qr {
+    width: 220px;
+    display: block;
+  }
+
+  .instruction {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #34495e;
+    font-weight: 500;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 15px;
+    background: #f4f4f4;
+    color: #7f8c8d;
+    font-size: 11px;
+    border-top: 1px dashed #ccc;
+  }
 </style>
 </head>
 <body>
 <div id="tarjeta-container">
   <div class="header">
     ${logoBase64 ? `<img src="${logoBase64}" class="logo"/>` : ''}
-    <div>
-      <strong>Tarjeta de Acceso</strong><br/>
-      Universidad de Tarapacá
-    </div>
+    <div class="title">Pase de Acceso</div>
+    <div style="font-size: 12px; font-weight: 300;">Universidad de Tarapacá</div>
   </div>
+  
   <div class="body">
     <div class="name">
-      ${estudiante.pna_nom} ${estudiante.pna_apat} ${estudiante.pna_amat}
+      ${estudiante.pna_nom}<br/>
+      ${estudiante.pna_apat} ${estudiante.pna_amat}
+    </div>    
+    <div class="qr-container">
+      <img src="${qrDataUrl}" class="qr"/>
     </div>
-    <img src="${qrDataUrl}" class="qr"/>
-    <p>Escanea este QR para ingresar al bus</p>
+    
+    <p class="instruction">Presente este código al subir al bus</p>
   </div>
-  <div class="footer">Dirección de Asuntos Estudiantiles</div>
+  
+  <div class="footer">
+    <strong>DAE - Dirección de Asuntos Estudiantiles</strong><br/>
+  </div>
 </div>
 </body>
 </html>
 `;
   }
-
   async getEstudiantesAutorizados() {
     return await this.estudianteRepo.query(`
     SELECT e.per_id, e.pna_nom, e.pna_apat, qt.token, es.est_sem_id

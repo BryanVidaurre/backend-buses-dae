@@ -18,6 +18,7 @@ export class IngresoBusService {
   ) {}
 
   async getEstudiantesAutorizados() {
+    console.log('Consultando estudiantes autorizados para ingreso al bus');
     const autorizados = await this.dataSource.query(`
       SELECT e.per_id, e.pna_nom, e.pna_apat, e.pna_amat, qt.token, es.est_sem_id, qt.qr_id
       FROM estudiante e
@@ -82,7 +83,9 @@ export class IngresoBusService {
           minute: '2-digit',
           hour12: false,
         });
-
+        console.log(
+          `Buscando recorrido para patente ${item.bus_patente} a las ${horaActual}`,
+        );
         const busAsignado = await this.busRepository
           .createQueryBuilder('bus')
           .where('bus.bus_patente = :patente', { patente: item.bus_patente })
@@ -129,6 +132,7 @@ export class IngresoBusService {
       saltados: datos.length - guardados.length,
     };
   }
+
   async getDashboardData() {
     const [buses, volumen, alumnos, ranking, puntosMapa, totalEstudiantes] =
       await Promise.all([
