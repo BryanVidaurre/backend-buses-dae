@@ -141,13 +141,6 @@ RESET_ADMIN_PASSWORD=NuevaPassword123
 
 ```bash
 npm run seed:reset-admin
-```
-
-✔ Fuerza el cambio de contraseña
-✔ No expone endpoints
-✔ Mantiene la seguridad del sistema
-
----
 
 ## Autenticación
 
@@ -215,14 +208,23 @@ npm run test:cov
 
 ```text
 src/
-├── auth/              # Autenticación, JWT y admins
-├── bus/               # Gestión de buses y recorridos
-├── estudiante/        # Carga masiva y CRUD de alumnos
-├── analisis/          # Reportes y métricas
-├── seeds/             # Seeds de inicialización y recuperación
-├── common/            # Filtros, guards y decoradores
-├── main.ts            # Entry point
-└── app.module.ts      # Módulo raíz
+├── assets/                 # Recursos estáticos y archivos auxiliares
+├── auth/                   # Autenticación, JWT y administración
+├── bus/                    # Gestión de buses y recorridos
+├── carrera/                # Carreras académicas
+├── estudiante/             # CRUD de estudiantes
+├── estudiante-carrera/     # Relación estudiante ↔ carrera
+├── estudiante-semestre/    # Relación estudiante ↔ semestre
+├── ingreso-bus/            # Registro de ingresos a buses
+├── qr-token/               # Generación y validación de tokens QR
+├── seeds/                  # Seeds (crear admin, reset password, etc.)
+├── semestre/               # Gestión de periodos académicos
+├── app.controller.ts       # Controlador raíz
+├── app.controller.spec.ts  # Tests del controlador raíz
+├── app.module.ts           # Módulo principal de la aplicación
+├── app.service.ts          # Servicio principal
+└── main.ts                 # Punto de entrada de la aplicación
+
 ```
 
 ---
