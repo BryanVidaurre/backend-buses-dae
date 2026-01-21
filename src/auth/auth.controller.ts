@@ -2,7 +2,6 @@ import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { CreateAdminDto } from './dto/create-admin.dto';
 
 @ApiTags('Autenticación') // Agrupa estos endpoints bajo la sección "Autenticación" en Swagger
 @Controller('auth')
@@ -26,23 +25,5 @@ export class AuthController {
   })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
-  }
-
-  @Post()
-  @ApiOperation({
-    summary: 'Registrar un nuevo administrador',
-    description:
-      'Crea una cuenta de administrador utilizando correos de gestión institucional. Este endpoint deberia desactivarse al crear un administrador o ser progetegido adecuadamente.',
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Administrador creado con éxito.',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Datos inválidos o el correo ya se encuentra registrado.',
-  })
-  createAdmin(@Body() dto: CreateAdminDto) {
-    return this.authService.createAdmin(dto);
   }
 }

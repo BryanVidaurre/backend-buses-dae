@@ -1,87 +1,228 @@
 
----
 
 # Backend: API de Gestión de Transporte DAE
 
-Núcleo de servicios basado en NestJS para la administración del sistema de transporte universitario. Esta API centraliza la autenticación, el procesamiento de datos académicos y la gestión de geolocalización de la flota.
+Núcleo de servicios basado en **NestJS** para la administración del sistema de transporte universitario.
+Esta API centraliza la **autenticación**, el **procesamiento de datos académicos** y la **gestión de geolocalización de la flota**, garantizando seguridad y escalabilidad.
+
+---
 
 ## Funcionalidades Principales
 
-* **Autenticación y Seguridad:** Implementación de Passport.js con estrategias JWT para la protección de endpoints administrativos.
-* **Procesamiento de Archivos:** Servicio especializado para la lectura y validación de padrones de estudiantes desde archivos Excel (.xlsx).
-* **Gestión de Datos Estudiantiles:** CRUD completo de alumnos y vinculación con periodos académicos (año/semestre).
-* **Servicios de Notificación:** Integración de Mailer para el envío masivo de comunicados institucionales.
-* **Dashboard Data:** Endpoints optimizados para el consumo de métricas de uso, rankings y coordenadas geográficas.
+* **Autenticación y Seguridad**
+
+  * Login administrativo con JWT
+  * Hash de contraseñas con bcrypt
+  * Control de acceso a endpoints protegidos
+
+* **Procesamiento de Archivos**
+
+  * Lectura y validación de padrones desde archivos Excel (.xlsx)
+
+* **Gestión de Datos Estudiantiles**
+
+  * CRUD completo de alumnos
+  * Asociación con periodos académicos (año / semestre)
+
+* **Servicios de Notificación**
+
+  * Envío de correos institucionales mediante SMTP (Gmail)
+
+* **Dashboard & Data**
+
+  * Endpoints optimizados para métricas, rankings y visualización geográfica
+
+---
 
 ## Arquitectura del Servidor
 
-El proyecto sigue el patrón modular de NestJS, organizando la lógica por dominios de negocio:
+El proyecto sigue el patrón **modular de NestJS**, separando responsabilidades por dominio:
 
-* **Auth Module:** Manejo de login y generación de tokens.
-* **Bus Module:** Lógica para la administración de patentes y recorridos.
-* **Estudiante Module:** Carga masiva, validación de datos y base de datos de alumnos.
-* **Analisis Module:** Queries complejas para reportes y visualización en el mapa.
+* **Auth Module**
+
+  * Login
+  * Generación de JWT
+  * Gestión de administradores
+
+* **Bus Module**
+
+  * Administración de buses, patentes y recorridos
+
+* **Estudiante Module**
+
+  * Carga masiva
+  * Validación y persistencia de alumnos
+
+* **Analisis Module**
+
+  * Consultas complejas para reportes y mapas
+
+---
 
 ## Requisitos Previos
 
-* Node.js (v18 o superior)
-* PostgreSQL / MySQL (según tu configuración de base de datos)
+* Node.js **v18 o superior**
+* Base de datos **SQLite** (por defecto)
 * NPM o Yarn
+
+---
 
 ## Configuración e Instalación
 
-1. **Instalar dependencias:**
+### 1️⃣ Instalación de dependencias
+
 ```bash
 npm install
-
 ```
 
+---
 
-2. **Variables de Entorno:**
-Configurar el archivo `.env` en la raíz del proyecto con las siguientes claves:
-```text
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=usuario
-DB_PASS=password
-DB_NAME=buses_dae
-JWT_SECRET=tu_clave_secreta
+### 2️⃣ Variables de Entorno
+
+Crear un archivo `.env` en la raíz del proyecto:
+
+```env
+DB_NAME=buses_db.sqlite
+
+JWT_SECRET= SECRET_SECRET
+
 MAIL_HOST=smtp.gmail.com
 MAIL_USER=tu_correo@gmail.com
 MAIL_PASS=tu_app_password
-
 ```
 
+---
 
-3. **Ejecución del Servidor:**
+## Inicialización del Administrador (Seed)
+
+Por razones de **seguridad**, **NO existe un endpoint público** para crear administradores en producción.
+La creación y recuperación de administradores se realiza **exclusivamente por seed**.
+
+---
+
+###  Crear el primer Administrador (Seed)
+
+#### Variables necesarias
+
+Agregar al `.env`:
+
+```env
+SEED_ADMIN_EMAIL=admin@uta.cl
+SEED_ADMIN_PASSWORD=Admin123456
+```
+
+#### Ejecutar seed
+
 ```bash
-# Modo desarrollo con auto-recarga
+npm run seed:admin
+```
+
+✔ Crea el administrador **solo si no existe**
+✔ La contraseña se guarda hasheada con bcrypt
+
+---
+
+### Resetear contraseña de Administrador (Seed)
+
+Utilizado cuando:
+
+* Se olvidó la contraseña
+* No existe flujo de recuperación por correo
+* Situaciones de emergencia (dev / staging / prod)
+
+#### Variables necesarias
+
+```env
+RESET_ADMIN_EMAIL=admin@uta.cl
+RESET_ADMIN_PASSWORD=NuevaPassword123
+```
+
+#### Ejecutar seed
+
+```bash
+npm run seed:reset-admin
+```
+
+✔ Fuerza el cambio de contraseña
+✔ No expone endpoints
+✔ Mantiene la seguridad del sistema
+
+---
+
+## Autenticación
+
+### Login de administrador
+
+**POST** `/auth/login`
+
+```json
+{
+  "email": "admin@uta.cl",
+  "password": "Admin123456"
+}
+```
+
+Respuesta:
+
+```json
+{
+  "access_token": "jwt_token",
+  "admin": {
+    "admin_id": 1,
+    "email": "admin@uta.cl",
+    "rol": "ADMIN"
+  }
+}
+```
+
+---
+
+## Ejecución del Servidor
+
+```bash
+# Modo desarrollo
 npm run start:dev
 
 # Modo producción
 npm run start:prod
-
 ```
 
-
+---
 
 ## Pruebas de Software
 
-* **Tests Unitarios:** `npm run test`
-* **Tests de Integración (e2e):** `npm run test:e2e`
-* **Cobertura de código:** `npm run test:cov`
+* **Tests unitarios**
 
-## Estructura de Archivos
+```bash
+npm run test
+```
+
+* **Tests de integración (e2e)**
+
+```bash
+npm run test:e2e
+```
+
+* **Cobertura**
+
+```bash
+npm run test:cov
+```
+
+---
+
+## Estructura del Proyecto
 
 ```text
 src/
-├── auth/          # Estrategias JWT y controladores de acceso.
-├── bus/           # Entidades y servicios de la flota.
-├── estudiante/    # Lógica de carga masiva y persistencia de alumnos.
-├── common/        # Middlewares, filtros de excepciones y decoradores.
-├── main.ts        # Punto de entrada de la aplicación.
-└── app.module.ts  # Módulo raíz que orquesta las dependencias.
-
+├── auth/              # Autenticación, JWT y admins
+├── bus/               # Gestión de buses y recorridos
+├── estudiante/        # Carga masiva y CRUD de alumnos
+├── analisis/          # Reportes y métricas
+├── seeds/             # Seeds de inicialización y recuperación
+├── common/            # Filtros, guards y decoradores
+├── main.ts            # Entry point
+└── app.module.ts      # Módulo raíz
 ```
 
 ---
