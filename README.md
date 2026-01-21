@@ -180,30 +180,6 @@ npm run start:dev
 npm run start:prod
 ```
 
----
-
-## Pruebas de Software
-
-* **Tests unitarios**
-
-```bash
-npm run test
-```
-
-* **Tests de integración (e2e)**
-
-```bash
-npm run test:e2e
-```
-
-* **Cobertura**
-
-```bash
-npm run test:cov
-```
-
----
-
 ## Estructura del Proyecto
 
 ```text
