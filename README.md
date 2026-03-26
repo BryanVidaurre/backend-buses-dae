@@ -89,7 +89,11 @@ JWT_SECRET= SECRET_SECRET
 MAIL_HOST=smtp.gmail.com
 MAIL_USER=tu_correo@gmail.com
 MAIL_PASS=tu_app_password
+MAIL_REDIRECT_TO=correo_pruebas@ejemplo.com
 ```
+
+> Si defines `MAIL_REDIRECT_TO`, todos los correos se redirigen a esa dirección
+> (modo pruebas), evitando envíos a correos reales de estudiantes.
 
 ---
 
@@ -204,4 +208,3 @@ src/
 ```
 
 ---
-

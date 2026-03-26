@@ -51,6 +51,11 @@ export class EstudianteService {
     });
   }
 
+  private getMailRedirectTo(): string | null {
+    const redirectTo = this.configService.get<string>('MAIL_REDIRECT_TO');
+    return redirectTo?.trim() ? redirectTo.trim() : null;
+  }
+
   async uploadExcel(
     file: Express.Multer.File,
     anio: number,
@@ -188,9 +193,11 @@ export class EstudianteService {
     await page.close();
 
     if (estudiante.per_email) {
+      const redirectTo = this.getMailRedirectTo();
+      const recipient = redirectTo ?? estudiante.per_email;
       const info = await transporter.sendMail({
         from: '"DAE Universidad de Tarapacá" <thepakross@gmail.com>',
-        to: estudiante.per_email,
+        to: recipient,
         subject: 'Tu Tarjeta de Acceso - Bus de Acercamiento DAE',
         html: this.buildEmailTemplate(estudiante),
         attachments: [
@@ -492,10 +499,11 @@ export class EstudianteService {
 
     const transporter = this.getMailTransporter();
 
+    const redirectTo = this.getMailRedirectTo();
     await transporter.sendMail({
       from: '"DAE Universidad de Tarapacá" <noreply@uta.cl>',
-      to: 'thepakross@gmail.com',
-      bcc: listaCorreos,
+      to: redirectTo ?? 'thepakross@gmail.com',
+      bcc: redirectTo ? undefined : listaCorreos,
       subject: asunto,
       html: `
       <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2c3e50; line-height: 1.6; max-width: 600px;">
